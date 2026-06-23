@@ -1,17 +1,37 @@
 import requests
 import pandas as pd
+import os
 
-url = "https://api.mfapi.in/mf/125497"
+# Create folder if it doesn't exist
+os.makedirs("data/raw/nav_data", exist_ok=True)
 
-response = requests.get(url)
+schemes = {
+    "SBI_Bluechip": 119551,
+    "ICICI_Bluechip": 120503,
+    "Nippon_Large_Cap": 118632,
+    "Axis_Bluechip": 119092,
+    "Kotak_Bluechip": 120841
+}
 
-data = response.json()
+for fund_name, scheme_code in schemes.items():
 
-df = pd.DataFrame(data["data"])
+    url = f"https://api.mfapi.in/mf/{scheme_code}"
 
-df.to_csv(
-    "data/raw/live_nav.csv",
-    index=False
-)
+    print(f"Fetching {fund_name}...")
 
-print("NAV data saved successfully")
+    response = requests.get(url)
+
+    if response.status_code == 200:
+
+        data = response.json()
+
+        nav_df = pd.DataFrame(data["data"])
+
+        file_path = f"data/raw/nav_data/{fund_name}.csv"
+
+        nav_df.to_csv(file_path, index=False)
+
+        print(f"Saved: {file_path}")
+
+    else:
+        print(f"Failed for {fund_name}")
